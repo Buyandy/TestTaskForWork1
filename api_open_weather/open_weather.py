@@ -2,34 +2,9 @@ import openmeteo_requests
 import asyncio
 
 from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
+from api_open_weather.types import CurrentWeather
 
 
-class Coordinate:
-    width: float
-    length: float
-
-    def __init__(self, latitude: float, longitude: float) -> None:
-        self.width = latitude
-        self.length = longitude
-
-
-
-class CurrentWeather:
-    coordinate: Coordinate
-    temperature_2m: float | None
-    relative_humidity_2m: float | None
-    pressure_msl: float | None
-    surface_pressure: float | None
-
-    def __init__(self, latitude: float, longitude: float, temperature_2m: float | None = None,
-    relative_humidity_2m: float | None = None, pressure_msl: float | None = None,
-    surface_pressure: float | None = None
-    ) -> None:
-        self.coordinate = Coordinate(latitude=latitude, longitude=longitude)
-        self.temperature_2m = temperature_2m
-        self.relative_humidity_2m = relative_humidity_2m
-        self.pressure_msl = pressure_msl
-        self.surface_pressure = surface_pressure
 
 
 
@@ -45,12 +20,16 @@ async def _get_response_weather(latitude: float, longitude: float) -> WeatherApi
     responses = await openmeteo.weather_api(url, params=params)
 
     response = responses[0]
-    if WeatherApiResponse is response:
+    if response:
         return response
     return None
 
 
 async def get_current_weather(latitude: float, longitude: float) -> CurrentWeather | None:
+
+    if (abs(latitude) > 90) or (abs(longitude) > 180):
+        return None
+
     if response := await _get_response_weather(latitude, longitude):
         if current := response.Current():
             if current_temperature_2m := current.Variables(0):                     #1
