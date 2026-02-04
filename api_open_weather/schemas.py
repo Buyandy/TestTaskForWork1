@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-
 class CurrentWeather(BaseModel):
     longitude: float
     latitude: float

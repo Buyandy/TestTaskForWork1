@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from fastapi_open_weather.app import router
+from open_weather_fastapi.routers import router_main
 
 app = FastAPI()
 
-app.include_router(router)
+app.include_router(router_main)
 

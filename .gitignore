@@ -1,2 +1,4 @@
 venv
 .cache.sqlite
+sql_app.db
+__pycache__

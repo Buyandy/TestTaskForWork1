@@ -2,7 +2,7 @@ import openmeteo_requests
 import asyncio
 
 from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
-from api_open_weather.types import CurrentWeather
+from .schemas import CurrentWeather
 
 
 
