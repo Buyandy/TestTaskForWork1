@@ -1,6 +1,7 @@
 from sqlalchemy.orm import relationship
-from open_weather_fastapi.core import Base, engine
-from sqlalchemy import Column, ForeignKey, Integer, Float, String
+from ..core import Base, engine
+from sqlalchemy import Column, ForeignKey, Integer, Float, String, DateTime
+from ..tools.get_time import now_time
 
 
 class Cities(Base):
@@ -11,6 +12,7 @@ class Cities(Base):
     latitude = Column(Float)
     longitude = Column(Float)
     weather = relationship("Weathers", back_populates="city", uselist=False)
+    created_at = Column(DateTime, default=now_time, nullable=False)
     
 
 class Weathers(Base):
@@ -23,6 +25,13 @@ class Weathers(Base):
     pressure_msl = Column(Float)
     surface_pressure = Column(Float)
     city = relationship("Cities", back_populates="weather")
+    created_at = Column(DateTime(timezone=True), default=now_time, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), 
+        default=now_time, 
+        onupdate=now_time, 
+        nullable=False
+    )
 
 
 Base.metadata.create_all(engine)

@@ -1,0 +1,5 @@
+fastapi==0.128.1
+openmeteo_requests==1.7.5
+openmeteo_sdk==1.25.0
+pydantic==2.12.5
+SQLAlchemy==2.0.46

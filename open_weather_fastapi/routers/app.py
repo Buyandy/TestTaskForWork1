@@ -4,13 +4,13 @@ from api_open_weather.schemas import CurrentWeather
 from api_open_weather.open_weather import get_current_weather
 from .. import crud
 
-
 def get_db():
     db = crud.SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
 
 
 router_app = APIRouter()
