@@ -8,15 +8,28 @@ from .schemas import CurrentWeather
 
 
 
-async def _get_response_weather(latitude: float, longitude: float) -> WeatherApiResponse | None:
+async def _get_response_weather(latitude: float, longitude: float, get_hourly = False) -> WeatherApiResponse | None:
     openmeteo = openmeteo_requests.AsyncClient()
 
     url = "https://api.open-meteo.com/v1/forecast"
-    params = {
+    if get_hourly:
+        params = {
         "latitude": latitude,
         "longitude": longitude,
-        "current": ["temperature_2m", "relative_humidity_2m", "pressure_msl", "surface_pressure"],
+        "hourly": [
+            "temperature_2m",           
+            "relative_humidity_2m",     
+            "wind_speed_10m",           
+            "precipitation"
+        ],
+        "timezone": "auto"
     }
+    else:
+        params = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "current": ["temperature_2m", "relative_humidity_2m", "pressure_msl", "surface_pressure"],
+        }
     responses = await openmeteo.weather_api(url, params=params)
 
     response = responses[0]
@@ -65,6 +78,27 @@ async def get_current_weather(latitude: float, longitude: float) -> CurrentWeath
     return None
 
 
+async def get_hour_weather(latitude: float, longitude: float, hour: int) -> CurrentWeather | None:
+    if response := await _get_response_weather(latitude=latitude, longitude=longitude, get_hourly=True):
+        if hourly := response.Hourly():
+            hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()[hour] # type:ignore
+            hourly_relative_humidity_2m = hourly.Variables(1).ValuesAsNumpy()[hour] # type:ignore 
+            hourly_wind_speed_10m = hourly.Variables(2).ValuesAsNumpy()[hour]   # type:ignore
+            hourly_precipitation = hourly.Variables(3).ValuesAsNumpy()[hour] # type:ignore
+            
+            return CurrentWeather(
+                longitude=longitude,
+                latitude=latitude,
+                temperature_2m=hourly_temperature_2m,
+                relative_humidity_2m=hourly_relative_humidity_2m,
+                wind_speed_10m=hourly_wind_speed_10m,
+                precipitation=hourly_precipitation
+            )
+    return None
+    
+            
+
+
 
 if __name__ == "__main__":
-    asyncio.run(get_current_weather(52.52, 13.41))
+    asyncio.run(get_hour_weather(52.52, 13.41, 12))

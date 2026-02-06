@@ -1,4 +1,6 @@
+apscheduler==3.11.2
 fastapi==0.128.1
+niquests==3.17.0
 openmeteo_requests==1.7.5
 openmeteo_sdk==1.25.0
 pydantic==2.12.5

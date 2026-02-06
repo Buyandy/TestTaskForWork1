@@ -1,10 +1,11 @@
 from contextlib import contextmanager
 from typing import Generator
 from niquests import get
+from numpy import inf
 from sqlalchemy.orm import Session, sessionmaker
 from ..models import Cities, Weathers
 from api_open_weather.schemas import CurrentWeather
-from api_open_weather.open_weather import get_current_weather
+from api_open_weather.open_weather import get_current_weather, get_hour_weather
 from sqlalchemy import func, and_
 from ..core import engine
 import logging
@@ -61,7 +62,7 @@ def update_weather(city: Cities, weather: CurrentWeather, db: Session):
         )
     db.commit()
     db.refresh(city, ["weather"])
-    logger.info(f"Погода в городе {city.name} успешно обновленна!")
+    logger.info(f"Погода в городе {city.name} успешно обновлена!")
     logger.info(city.weather.updated_at)
 
 def create_new_city(name: str, latitude: float, longitude: float, weather: CurrentWeather, db: Session) -> Cities:
@@ -88,4 +89,43 @@ async def update_all_weather():
             for city in cities:
                 if current_weather := await get_current_weather(latitude=city.latitude, longitude=city.longitude):#type:ignore
                     update_weather(city, current_weather, db)
+
+
+def get_all_name_cities(db: Session):
+    if cities := db.query(Cities).all():
+        names = []
+        for city in cities:
+            names.append(city.name)
+        return names
+    return None
                 
+
+async def get_all_hourly_weather(db: Session, name_city: str, hour: int):
+    if city := db.query(Cities).filter(Cities.name == name_city).first():
+        logger.info(f"Город {city.name} был найден!")
+        return await get_hour_weather(latitude=city.latitude, longitude=city.longitude, hour=hour)# type:ignore
+    return None
+
+
+async def get_current_info_weather(name_city: str,
+    hour: int,
+    get_temperature: bool,
+    get_humidity: bool,
+    get_wind_speed: bool,
+    get_precipitation: bool,
+    db: Session
+    ):
+    if city := db.query(Cities).filter(Cities.name == name_city).first():
+        logger.info(f"Город {city.name} был найден!")
+        if hour_weather := await get_hour_weather(latitude=city.latitude, longitude=city.longitude, hour=hour):# type:ignore
+            info = {}
+            if get_temperature:
+                info["temperature"] = hour_weather.temperature_2m
+            if get_humidity:
+                info["humidity"] = hour_weather.relative_humidity_2m
+            if get_wind_speed:
+                info["wind_speed"] = hour_weather.wind_speed_10m
+            if get_precipitation:
+                info["precipitation"] = hour_weather.precipitation
+            return info
+    return None
